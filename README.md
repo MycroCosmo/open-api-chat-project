@@ -21,6 +21,17 @@ Spring Boot 애플리케이션에 **OpenAI GPT API**를 연동하여 사용자�
 - **Language**: Java 21
 
 ---
+## 🛠 프로젝트 소개
+
+
+
+https://github.com/user-attachments/assets/c837ef17-4299-4dea-9386-c1fc61aa5cb6
+
+
+
+
+
+---
 
 ## 📦 Gradle Dependencies
 
