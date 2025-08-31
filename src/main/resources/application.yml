@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: demo
+
+  config:
+    import: optional:classpath:application-secret.yml
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+
+    chat:
+      memory:
+        repository:
+          type: jdbc
+          jdbc:
+            initialize-schema: never
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
