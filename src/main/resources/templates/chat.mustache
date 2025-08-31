@@ -1,178 +1,383 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <title>Chat Bot</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #ececf1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat Bot · Clean UI</title>
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e5e7eb;
+      --primary: #10a37f;
+      --primary-600:#0d8f6d;
+      --user-bubble:#dcfce7;
+      --bot-bubble:#f4f6f8;
+      --code-bg:#0b1020;
+      --code-border:#1f2937;
+      --shadow: 0 8px 30px rgba(2,8,20,0.06);
+      --radius: 14px;
+    }
+    :root.dark{
+      --bg: #0b1020;
+      --panel: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --border: #1f2a37;
+      --user-bubble:#113b2f;
+      --bot-bubble:#0b1220;
+      --code-bg:#0a0f1c;
+      --code-border:#111827;
+      --shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
 
-        #chat-container {
-            width: 700px;
-            height: calc(100vh - 72px);
-            margin: 36px 0;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-        }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Apple SD Gothic Neo, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      display:flex; align-items:center; justify-content:center;
+    }
 
-        #chat {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    .app{
+      width:min(920px, 100%);
+      height: calc(100dvh - 32px);
+      margin:16px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      overflow:hidden;
+    }
 
-        .message {
-            max-width: 80%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 15px;
-            line-height: 1.4;
-            white-space: pre-wrap;
-        }
+    /* Topbar */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 12px 16px;
+      border-bottom:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,163,127,0.06), transparent 60%);
+    }
+    .brand{ display:flex; align-items:center; gap:10px; }
+    .logo{ width:28px; height:28px; border-radius:8px; background: var(--primary); display:grid; place-items:center; color:#fff; font-weight:700; }
+    .title{ font-weight:700; letter-spacing:0.2px; }
+    .toolbar{ display:flex; align-items:center; gap:8px; }
+    .icon-btn{
+      border:1px solid var(--border);
+      background:transparent; color:var(--text);
+      padding:8px 10px; border-radius:10px; cursor:pointer; font-size:13px;
+    }
+    .icon-btn:hover{ background: rgba(16,163,127,0.08); border-color: rgba(16,163,127,0.35); }
 
-        .user {
-            align-self: flex-end;
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border-top-right-radius: 0;
-        }
+    /* Chat area */
+    .chat{ padding:16px; overflow:auto; scroll-behavior: smooth; }
+    .day-sep{ display:flex; align-items:center; gap:10px; margin:12px 0; }
+    .day-sep::before,.day-sep::after{ content:""; flex:1; height:1px; background:var(--border); }
+    .day-sep span{ color:var(--muted); font-size:12px; }
 
-        .bot {
-            align-self: flex-start;
-            background-color: #f1f0f0;
-            color: #111;
-            border-top-left-radius: 0;
-        }
+    .msg{ display:flex; gap:10px; margin:6px 0; animation: fadeIn .25s ease; }
+    .msg.bot{ align-items:flex-start; }
+    .msg.user{ flex-direction: row-reverse; }
+    .avatar{ min-width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:700; }
+    .avatar.bot{ background:#111; color:#fff; }
+    .avatar.user{ background:#16a34a; color:#fff; }
 
-        #inputArea {
-            display: flex;
-            gap: 8px;
-        }
+    .bubble{
+      max-width: min(76%, 680px);
+      padding: 12px 14px; border-radius: 14px; line-height:1.5; font-size:15px;
+      white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere;
+      border:1px solid var(--border);
+    }
+    .bot .bubble{ background: var(--bot-bubble); border-top-left-radius: 4px; }
+    .user .bubble{ background: var(--user-bubble); border-top-right-radius: 4px; }
 
-        #inputText {
-            flex: 1;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-        }
+    .bubble pre{
+      background: var(--code-bg);
+      color: #e5e7eb; border:1px solid var(--code-border);
+      border-radius: 10px; padding: 10px; overflow:auto; max-width:100%;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px; line-height:1.6; margin: 8px 0 2px;
+    }
 
-        #sendBtn {
-            padding: 10px 18px;
-            background-color: #10a37f;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+    .meta{ font-size:11px; color: var(--muted); margin-top:4px; }
 
-        #sendBtn:hover {
-            background-color: #0d8f6d;
-        }
-    </style>
+    /* Composer */
+    .composer{
+      display:flex; gap:8px; padding:12px; border-top:1px solid var(--border);
+      background: linear-gradient(180deg, transparent, rgba(16,163,127,0.05));
+    }
+    .textarea{
+      flex:1; position:relative; display:flex; align-items:flex-end; background:var(--panel);
+      border:1px solid var(--border); border-radius: 12px; padding: 8px 12px;
+    }
+    textarea{
+      flex:1; resize:none; border:none; outline:none; background:transparent; color:var(--text);
+      min-height: 24px; max-height: 160px; font-size:15px; line-height:1.5;
+    }
+    .hint{ position:absolute; right:10px; bottom:4px; font-size:11px; color:var(--muted); }
+
+    .send{
+      background: var(--primary); color:#fff; border:none; padding: 10px 16px; border-radius: 12px; cursor:pointer; font-weight:700;
+    }
+    .send[disabled]{ opacity: .6; cursor:not-allowed; }
+    .send:hover{ background: var(--primary-600); }
+
+    /* Typing indicator */
+    .typing{ display:inline-flex; gap:3px; align-items:center; }
+    .typing span{ width:6px; height:6px; border-radius:50%; background:#9aa3af; display:inline-block; opacity:.5; animation: blink 1.2s infinite; }
+    .typing span:nth-child(2){ animation-delay:.2s; }
+    .typing span:nth-child(3){ animation-delay:.4s; }
+
+    /* Scroll to bottom */
+    .scroll-bottom{
+      position:absolute; right:20px; bottom:90px; z-index:5;
+      border:1px solid var(--border); background: var(--panel); color: var(--text);
+      border-radius: 999px; padding: 8px 10px; cursor:pointer; display:none; box-shadow: var(--shadow);
+      font-size:12px;
+    }
+    .scroll-bottom.show{ display:block; }
+
+    @keyframes blink{ 0%,80%,100%{ opacity:.2 } 40%{ opacity:1 } }
+    @keyframes fadeIn{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none; } }
+
+    /* Custom scrollbar */
+    .chat::-webkit-scrollbar{ width:10px; }
+    .chat::-webkit-scrollbar-thumb{ background: rgba(100,116,139,.35); border-radius:999px; }
+    .chat::-webkit-scrollbar-track{ background: transparent; }
+
+    @media (max-width: 640px){
+      .bubble{ max-width: 100%; }
+      .title{ font-size:14px; }
+    }
+  </style>
 </head>
 <body>
+  <div class="app" role="application" aria-label="채팅 애플리케이션">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">C</div>
+        <div class="title">Chat Bot</div>
+      </div>
+      <div class="toolbar">
+        <button id="themeToggle" class="icon-btn" title="테마 전환" aria-label="테마 전환">🌗</button>
+        <button id="clearBtn" class="icon-btn" title="대화 비우기" aria-label="대화 비우기">지우기</button>
+      </div>
+    </header>
 
-<div id="chat-container">
-    <div id="chat"></div>
+    <main id="chat" class="chat" aria-live="polite" aria-atomic="false"></main>
 
-    <div id="inputArea">
-        <input type="text" id="inputText" placeholder="메시지를 입력하세요" />
-        <button id="sendBtn">전송</button>
-    </div>
-</div>
+    <button id="scrollBtn" class="scroll-bottom" aria-label="맨 아래로 이동">아래로</button>
 
-<script>
-    const chatDiv = document.getElementById('chat');
-    const inputText = document.getElementById('inputText');
+    <form id="composer" class="composer" autocomplete="off">
+      <div class="textarea">
+        <textarea id="inputText" placeholder="메시지를 입력하세요… (Enter: 전송 · Shift+Enter: 줄바꿈)" aria-label="메시지 입력"></textarea>
+        <div class="hint">Enter 전송</div>
+      </div>
+      <button id="sendBtn" class="send" type="submit" disabled>전송</button>
+    </form>
+  </div>
+
+  <script>
+    // ==== Elements ====
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('inputText');
     const sendBtn = document.getElementById('sendBtn');
+    const composer = document.getElementById('composer');
+    const themeToggle = document.getElementById('themeToggle');
+    const clearBtn = document.getElementById('clearBtn');
+    const scrollBtn = document.getElementById('scrollBtn');
 
-    const userId = 'xxxjjhhh_3';
+    // ==== State ====
+    const userId = 'xxxjjhhh_4'; // 기존 로직 유지
+    let isStreaming = false;
+    let shouldStickToBottom = true;
 
-    // 대화 기록 불러오기
-    async function loadChatHistory() {
-        const response = await fetch(`/chat/history/${userId}`, {
-            method: 'POST'
-        });
-        const messages = await response.json();
-        messages.forEach(msg => {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', msg.type === 'USER' ? 'user' : 'bot');
-            msgDiv.textContent = msg.content;
-            chatDiv.appendChild(msgDiv);
-        });
-        chatDiv.scrollTop = chatDiv.scrollHeight;
+    // ==== Theme ====
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('theme');
+    const applyTheme = (theme) => {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('theme', theme);
+    };
+    applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+    themeToggle.addEventListener('click', () => {
+      const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+      applyTheme(next);
+    });
+
+    // ==== Utilities ====
+    function atBottom() {
+      const threshold = 20; // px
+      return chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < threshold;
+    }
+    function scrollToBottom(force=false){
+      if (force || shouldStickToBottom) chatEl.scrollTop = chatEl.scrollHeight;
+    }
+    function setStickiness(){ shouldStickToBottom = atBottom(); scrollBtn.classList.toggle('show', !shouldStickToBottom); }
+
+    function createMessage(role, text, {withMeta=false}={}){
+      const row = document.createElement('div');
+      row.className = `msg ${role}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = `avatar ${role}`;
+      avatar.textContent = role === 'user' ? 'U' : 'B';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text || '';
+
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+
+      if (withMeta){
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = new Date().toLocaleTimeString();
+        row.appendChild(meta);
+      }
+      chatEl.appendChild(row);
+      return {row, bubble};
     }
 
-    // 채팅 API
-    async function fetchStream(text) {
-        const response = await fetch('/chat/stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-        });
+    function createTyping(){
+      const {row, bubble} = createMessage('bot', '');
+      const dots = document.createElement('div');
+      dots.className = 'typing';
+      dots.innerHTML = '<span></span><span></span><span></span>';
+      bubble.appendChild(dots);
+      return {row, bubble};
+    }
 
+    // Minimal fenced code block renderer for ```lang\n...```
+    function renderFences(container, raw){
+      // clear and rebuild
+      container.innerHTML = '';
+      const fence = /```(\w+)?\n([\s\S]*?)```/g;
+      let lastIndex = 0; let m;
+      while ((m = fence.exec(raw))){
+        const before = raw.slice(lastIndex, m.index);
+        if (before) container.appendChild(document.createTextNode(before));
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.textContent = m[2].replace(/\n$/, '');
+        pre.appendChild(code); container.appendChild(pre);
+        lastIndex = fence.lastIndex;
+      }
+      const tail = raw.slice(lastIndex);
+      if (tail) container.appendChild(document.createTextNode(tail));
+    }
+
+    // ==== History ====
+    async function loadChatHistory(){
+      try{
+        const res = await fetch(`/chat/history/${userId}`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to load history');
+        const messages = await res.json();
+        messages.forEach(m => {
+          const role = (m.type === 'USER') ? 'user' : 'bot';
+          const { bubble } = createMessage(role, '');
+          // render fences if any
+          const text = String(m.content ?? '');
+          if (text.includes('```')) renderFences(bubble, text); else bubble.textContent = text;
+        });
+        scrollToBottom(true);
+      }catch(e){
+        const { bubble } = createMessage('bot', '대화 기록을 불러오지 못했습니다. 잠시 후 다시 시도하세요.');
+      }
+    }
+
+    // ==== Streaming ====
+    async function fetchStream(text){
+      const typing = createTyping();
+      scrollToBottom();
+      isStreaming = true;
+      try{
+        const response = await fetch('/chat/stream', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!response.ok || !response.body) throw new Error('Stream error');
+        typing.bubble.innerHTML = ''; // clear typing
+        let raw = '';
+        const botBubble = typing.bubble;
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
-
-        // 봇 메시지 div 생성
-        const botMessageDiv = document.createElement('div');
-        botMessageDiv.classList.add('message', 'bot');
-        botMessageDiv.textContent = '';
-        chatDiv.appendChild(botMessageDiv);
-        chatDiv.scrollTop = chatDiv.scrollHeight;
-
-        let botMessage = '';
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            botMessage += chunk;
-            botMessageDiv.textContent = botMessage;
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+        while (true){
+          const { value, done } = await reader.read();
+          if (done) break;
+          raw += decoder.decode(value, { stream:true });
+          // live update as plain text for performance
+          botBubble.textContent = raw;
+          scrollToBottom();
         }
+        // final render with code blocks
+        if (raw.includes('```')) renderFences(botBubble, raw);
+      }catch(err){
+        typing.bubble.textContent = '응답 받는 중 오류가 발생했습니다.';
+      }finally{
+        isStreaming = false;
+        updateSendState();
+        scrollToBottom();
+      }
     }
 
-    sendBtn.addEventListener('click', async () => {
-        const text = inputText.value.trim();
-        if (!text) return;
+    // ==== Composer ====
+    function autoGrow(){
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+    }
 
-        // 사용자 메시지 div 생성
-        const userMessageDiv = document.createElement('div');
-        userMessageDiv.classList.add('message', 'user');
-        userMessageDiv.textContent = text;
-        chatDiv.appendChild(userMessageDiv);
+    function updateSendState(){
+      const hasText = inputEl.value.trim().length > 0;
+      sendBtn.disabled = !hasText || isStreaming;
+    }
 
-        inputText.value = '';
+    composer.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text || isStreaming) return;
 
-        await fetchStream(text);
+      // user bubble
+      const { bubble } = createMessage('user', text);
+      inputEl.value = '';
+      autoGrow();
+      updateSendState();
+      scrollToBottom(true);
+      await fetchStream(text);
     });
 
-    inputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendBtn.click();
+    inputEl.addEventListener('input', () => { autoGrow(); updateSendState(); });
+
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        if (!sendBtn.disabled) composer.requestSubmit();
+      }
     });
 
-    // 페이지 로드 시 대화 불러오기
-    window.addEventListener('DOMContentLoaded', loadChatHistory);
+    // Stickiness & scroll button
+    chatEl.addEventListener('scroll', setStickiness);
+    scrollBtn.addEventListener('click', () => scrollToBottom(true));
 
-</script>
+    // Clear chat (UI-only; optional backend call inside try/catch)
+    clearBtn.addEventListener('click', async () => {
+      chatEl.innerHTML = '';
+      scrollToBottom(true);
+      try{
+        // await fetch(`/chat/history/${userId}`, { method: 'DELETE' });
+      }catch(e){ /* no-op */ }
+    });
 
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      autoGrow(); updateSendState(); loadChatHistory(); setStickiness();
+    });
+  </script>
 </body>
 </html>
